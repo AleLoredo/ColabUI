@@ -58,11 +58,16 @@ function toggleOptimizeUi(isAutoRun = false) {
             pero no limita la expansión de los iconos */
             colab-left-pane-nib {
                 max-width: 4vw !important;
+                overflow: hidden !important; /* FIX: Evita desbordamiento al hacer zoom */
             }
 
             /* quita padding de la silueta contenedora del menu lateral */
             .colab-left-pane-nib .left-pane-top {
                 padding: 0 !important;
+                display: flex !important;
+                flex-direction: column !important;
+                align-items: center !important;
+                width: 100% !important;
             }
              /* icono de gemini  - revisar */  
             toggle-composer-button {
@@ -78,9 +83,12 @@ function toggleOptimizeUi(isAutoRun = false) {
             } */
 
 
-            /* limita ancho iconos menu lateral */
-            md-icon {
-                max-width: 3vw !important;
+            /* limita ancho iconos menu lateral - FIX: Scoped and fluid */
+            .colab-left-pane-nib md-icon {
+                max-width: 100% !important;
+                width: auto !important;
+                min-width: 0 !important;
+                /* Optional: clamp font size if icons rely on it */
             }
 
             /* definir limites maximos para UI */
@@ -104,7 +112,10 @@ function toggleOptimizeUi(isAutoRun = false) {
             } */
       
             .colab-left-pane-nib md-icon-button {
-                max-width: 6vw !important;
+                max-width: 100% !important; /* FIX: Ensure button fits in nib */
+                width: auto !important;
+                padding: 0 !important; /* Reduce padding to save space */
+                margin: 2px 0 !important;
             }
           
             .view-lines monaco-mouse-cursor-text {
