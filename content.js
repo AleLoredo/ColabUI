@@ -3,9 +3,12 @@
 // Listen for messages
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.action === "toggle_optimize_ui") {
+        // Legacy or if called without state
         toggleOptimizeUi();
     } else if (request.action === "reset_optimize_ui") {
         resetOptimizeUi();
+    } else if (request.action === "set_optimization_state") {
+        setOptimizeUi(request.enable);
     }
 });
 
@@ -24,16 +27,16 @@ function resetOptimizeUi() {
     }
 }
 
-function toggleOptimizeUi(isAutoRun = false) {
+function setOptimizeUi(enable, isAutoRun = false) {
     const styleId = 'ft-optimize-ui';
     const existingStyle = document.getElementById(styleId);
 
-    if (existingStyle) {
+    if (!enable && existingStyle) {
         existingStyle.remove();
         optimizeColabLayout(false);
 
         showNotification('Optimización UI desactivada.');
-    } else {
+    } else if (enable && !existingStyle) {
         const style = document.createElement('style');
         style.id = styleId;
         style.textContent = `
@@ -412,39 +415,46 @@ function showNotification(message) {
 }
 
 // --- Auto-Run on Load ---
+
 function initAutoOptimize() {
-    // Check if optimization is already applied
-    if (document.getElementById('ft-optimize-ui')) return;
+    // Check storage first
+    chrome.storage.local.get(['optimizationEnabled'], (result) => {
+        // Default to true if not set, to match previous behavior for installed users
+        if (result.optimizationEnabled === false) return;
 
-    let waitForColab;
+        // Check if optimization is already applied
+        if (document.getElementById('ft-optimize-ui')) return;
 
-    const checkAndRun = () => {
-        const sidebar = document.querySelector('.colab-left-pane-nib .left-pane-top');
-        const statusBar = document.querySelector('colab-status-bar');
+        let waitForColab;
 
-        if (sidebar && statusBar) {
-            // Elements found, stop observing and run optimization
+        const checkAndRun = () => {
+            const sidebar = document.querySelector('.colab-left-pane-nib .left-pane-top');
+            const statusBar = document.querySelector('colab-status-bar');
+
+            if (sidebar && statusBar) {
+                // Elements found, stop observing and run optimization
+                if (waitForColab) waitForColab.disconnect();
+                setOptimizeUi(true, true); // Pass true for enable, true for isAutoRun
+                return true;
+            }
+            return false;
+        };
+
+        // Check immediately
+        if (checkAndRun()) return;
+
+        // If not found, wait for them
+        waitForColab = new MutationObserver(() => {
+            checkAndRun();
+        });
+
+        waitForColab.observe(document.body, { childList: true, subtree: true });
+
+        // Safety timeout: stop looking after 30 seconds to save resources
+        setTimeout(() => {
             if (waitForColab) waitForColab.disconnect();
-            toggleOptimizeUi(true); // Pass true to indicate auto-run
-            return true;
-        }
-        return false;
-    };
-
-    // Check immediately
-    if (checkAndRun()) return;
-
-    // If not found, wait for them
-    waitForColab = new MutationObserver(() => {
-        checkAndRun();
+        }, 30000);
     });
-
-    waitForColab.observe(document.body, { childList: true, subtree: true });
-
-    // Safety timeout: stop looking after 30 seconds to save resources if something changes in Colab
-    setTimeout(() => {
-        if (waitForColab) waitForColab.disconnect();
-    }, 30000);
 }
 
 // Run init
@@ -452,4 +462,10 @@ if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initAutoOptimize);
 } else {
     initAutoOptimize();
+}
+
+function toggleOptimizeUi(isAutoRun = false) {
+    const styleId = 'ft-optimize-ui';
+    const existingStyle = document.getElementById(styleId);
+    setOptimizeUi(!existingStyle, isAutoRun);
 }
