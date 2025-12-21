@@ -162,7 +162,7 @@ function toggleOptimizeUi(isAutoRun = false) {
 
             #top-toolbar.collapsed {
                 margin-top: 2px;
-                margin: -3px 10px;
+                margin: 0px 10px;
                 padding: 0 8px;
 
             }
