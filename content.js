@@ -31,7 +31,7 @@ function toggleOptimizeUi(isAutoRun = false) {
     if (existingStyle) {
         existingStyle.remove();
         optimizeColabLayout(false);
-        sendMessageToInject({ action: 'SET_FONT_SIZE', enable: false });
+
         showNotification('Optimización UI desactivada.');
     } else {
         const style = document.createElement('style');
@@ -199,8 +199,9 @@ function toggleOptimizeUi(isAutoRun = false) {
         `;
         document.head.appendChild(style);
         optimizeColabLayout(true);
-        injectScript(); // Inject the bridge script
-        sendMessageToInject({ action: 'SET_FONT_SIZE', enable: true });
+
+        // Inject and configure script (handles loading check internally)
+
 
         if (isAutoRun) {
             showNotification('ColabUI ha optimizado esta UI');
@@ -210,23 +211,7 @@ function toggleOptimizeUi(isAutoRun = false) {
     }
 }
 
-// Function to inject the script into the page
-function injectScript() {
-    if (document.getElementById('ft-inject-script')) return;
 
-    const script = document.createElement('script');
-    script.src = chrome.runtime.getURL('inject.js');
-    script.id = 'ft-inject-script';
-    script.onload = function () {
-        this.remove(); // Clean up script tag after execution
-    };
-    (document.head || document.documentElement).appendChild(script);
-}
-
-// Function to send messages to inject.js
-function sendMessageToInject(message) {
-    window.postMessage({ type: 'FROM_CONTENT_SCRIPT', ...message }, '*');
-}
 
 function optimizeColabLayout(enable) {
     const sidebarContainer = document.querySelector('.colab-left-pane-nib .left-pane-top');

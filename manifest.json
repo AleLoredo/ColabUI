@@ -34,15 +34,5 @@
         "styles.css"
       ]
     }
-  ],
-  "web_accessible_resources": [
-    {
-      "resources": [
-        "inject.js"
-      ],
-      "matches": [
-        "https://colab.research.google.com/*"
-      ]
-    }
   ]
 }
