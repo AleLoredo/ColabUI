@@ -31,6 +31,7 @@ function toggleOptimizeUi(isAutoRun = false) {
     if (existingStyle) {
         existingStyle.remove();
         optimizeColabLayout(false);
+        sendMessageToInject({ action: 'SET_FONT_SIZE', enable: false });
         showNotification('Optimización UI desactivada.');
     } else {
         const style = document.createElement('style');
@@ -107,18 +108,11 @@ function toggleOptimizeUi(isAutoRun = false) {
                 font-size: 18px !important;
             }
 
-            /* Experimental: Aumentar legibilidad vertical sin afectar ancho */
-            .mtk1,.mtk4,.mtk5,.mtk6,.mtk7,.mtk8,.mtk14,.mtk17,.mtk20, .mtk21, .mtk22, .mtk25 {
-                display: inline-block !important;
-                transform: scale(1, 1.15) !important;
-                transform-origin: center center !important;
-                /* line-height adjustments might be needed if overlap occurs */
-            }
-      
+             /* colab-left-pane-nib md-icon-button rules remain */
             .colab-left-pane-nib md-icon-button {
-                max-width: 100% !important; /* FIX: Ensure button fits in nib */
+                max-width: 100% !important; 
                 width: auto !important;
-                padding: 0 !important; /* Reduce padding to save space */
+                padding: 0 !important; 
                 margin: 2px 0 !important;
             }
           
@@ -126,6 +120,7 @@ function toggleOptimizeUi(isAutoRun = false) {
                 font-size: 16px !important;
                 left:10px;
             }
+
             .monaco-editor .margin {
                 width: 40px;
             }
@@ -204,6 +199,8 @@ function toggleOptimizeUi(isAutoRun = false) {
         `;
         document.head.appendChild(style);
         optimizeColabLayout(true);
+        injectScript(); // Inject the bridge script
+        sendMessageToInject({ action: 'SET_FONT_SIZE', enable: true });
 
         if (isAutoRun) {
             showNotification('ColabUI ha optimizado esta UI');
@@ -211,6 +208,24 @@ function toggleOptimizeUi(isAutoRun = false) {
             showNotification('Optimización UI activada.');
         }
     }
+}
+
+// Function to inject the script into the page
+function injectScript() {
+    if (document.getElementById('ft-inject-script')) return;
+
+    const script = document.createElement('script');
+    script.src = chrome.runtime.getURL('inject.js');
+    script.id = 'ft-inject-script';
+    script.onload = function () {
+        this.remove(); // Clean up script tag after execution
+    };
+    (document.head || document.documentElement).appendChild(script);
+}
+
+// Function to send messages to inject.js
+function sendMessageToInject(message) {
+    window.postMessage({ type: 'FROM_CONTENT_SCRIPT', ...message }, '*');
 }
 
 function optimizeColabLayout(enable) {
