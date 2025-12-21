@@ -5,8 +5,27 @@
     const FT_FONT_SIZE = 18; // Desired font size
     const FT_LINE_HEIGHT = 28; // Optional: Adjust line height for better spacing
 
+    let isOptimizationEnabled = false;
+
+    // Function to apply font settings to a single editor instance
+    function updateEditorStyle(editor, enable) {
+        if (enable) {
+            editor.updateOptions({
+                fontSize: FT_FONT_SIZE,
+                suggestFontSize: FT_FONT_SIZE,
+            });
+        } else {
+            editor.updateOptions({
+                fontSize: 14,
+                suggestFontSize: 14
+            });
+        }
+    }
+
     // Function to apply font settings to all Monaco editors
     function applyMonacoSettings(enable) {
+        isOptimizationEnabled = enable;
+
         if (typeof monaco === 'undefined' || !monaco.editor) {
             // Monaco might not be loaded yet or not available globally on some views
             // Try finding editors via DOM if global is missing, though usually 'monaco' is global in Colab
@@ -15,26 +34,26 @@
         }
 
         const editors = monaco.editor.getEditors();
-
-        editors.forEach(editor => {
-            if (enable) {
-                // Store original options if needed, but for now just applying overrides
-                editor.updateOptions({
-                    fontSize: FT_FONT_SIZE,
-                    // lineHeight: FT_LINE_HEIGHT, // Uncomment if line height needs adjustment
-                    suggestFontSize: FT_FONT_SIZE, // autocomplete font size
-                });
-            } else {
-                // Reset to default (Colab usually uses 14px or 12px)
-                // We might need to guess or store original. 
-                // Colab default is typically around 14px.
-                editor.updateOptions({
-                    fontSize: 14,
-                    suggestFontSize: 14
-                });
-            }
-        });
+        editors.forEach(editor => updateEditorStyle(editor, enable));
     }
+
+    // Initialize listener for new editors (dynamic cell creation)
+    function initDynamicListener() {
+        if (typeof monaco !== 'undefined' && monaco.editor && monaco.editor.onDidCreateEditor) {
+            monaco.editor.onDidCreateEditor(editor => {
+                if (isOptimizationEnabled) {
+                    // Apply settings to the new editor
+                    updateEditorStyle(editor, true);
+                }
+            });
+        } else {
+            // Retry if monaco isn't ready yet
+            setTimeout(initDynamicListener, 1000);
+        }
+    }
+
+    // Start listening immediately
+    initDynamicListener();
 
     // Listen for messages from content.js
     window.addEventListener('message', function (event) {
