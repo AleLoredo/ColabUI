@@ -107,9 +107,13 @@ function toggleOptimizeUi(isAutoRun = false) {
                 font-size: 18px !important;
             }
 
-            /* .mtk1,.mtk4,.mtk5,.mtk6,.mtk7,.mtk8,.mtk14,.mtk17,.mtk20 {
-                font-size: 18px !important;
-            } */
+            /* Experimental: Aumentar legibilidad vertical sin afectar ancho */
+            .mtk1,.mtk4,.mtk5,.mtk6,.mtk7,.mtk8,.mtk14,.mtk17,.mtk20, .mtk21, .mtk22, .mtk25 {
+                display: inline-block !important;
+                transform: scale(1, 1.15) !important;
+                transform-origin: center center !important;
+                /* line-height adjustments might be needed if overlap occurs */
+            }
       
             .colab-left-pane-nib md-icon-button {
                 max-width: 100% !important; /* FIX: Ensure button fits in nib */
